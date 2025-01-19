@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Neural Network Activations Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 1200px;
+        }
+        #fileInput {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 2px dashed #ccc;
+            width: 100%;
+            text-align: center;
+        }
+        #controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        #layerSelect, #neuronSelect {
+            margin: 10px;
+            padding: 5px;
+            min-width: 200px;
+        }
+        #tokenContainer {
+            line-height: 1.6;
+            font-family: monospace;
+            font-size: 16px;
+            white-space: pre-wrap;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .token {
+            padding: 2px;
+            margin: 1px;
+            display: inline-block;
+            border-radius: 3px;
+            white-space: pre;
+            vertical-align: top;
+        }
+        .newline-token {
+            width: 100%;
+            height: 0;
+            display: inline-block;
+        }
+        .loading {
+            display: none;
+            margin: 10px 0;
+            color: #666;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+            display: none;
+        }
+        #stats {
+            margin: 10px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .token {
+            padding: 2px;
+            margin: 1px;
+            display: inline-block;
+            border-radius: 3px;
+            white-space: pre;
+            vertical-align: top;
+            transition: background-color 0.2s;
+        }
+        .token.contributing {
+            border: 1px solid #007bff;
+        }
+        .contribution-scale {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 200px;
+            background: linear-gradient(to bottom, #007bff, white);
+            border: 1px solid #ccc;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Neural Network Activations Visualizer</h1>
+    
+    <div id="fileInput">
+        <p>Drop your activations.json file here or click to select</p>
+        <input type="file" id="fileSelector" accept=".json">
+    </div>
+    
+    <div id="loading" class="loading">Loading data...</div>
+    <div id="error" class="error"></div>
+    
+    <div id="controls">
+        <select id="layerSelect">
+            <option value="">Select Layer</option>
+        </select>
+        <select id="neuronSelect">
+            <option value="">Select Neuron</option>
+        </select>
+        <div id="stats"></div>
+    </div>
+    
+    <div id="tokenContainer"></div>
+
+    <div class="contribution-scale" id="contributionScale">
+        <div style="position: absolute; top: -20px; width: 100%; text-align: center;">100%</div>
+        <div style="position: absolute; bottom: -20px; width: 100%; text-align: center;">0%</div>
+    </div>
+
+    <script>
+        let activationData;
+        let currentLayer = '';
+        let currentNeuron = '';
+
+        const fileSelector = document.getElementById('fileSelector');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const stats = document.getElementById('stats');
+
+        fileSelector.addEventListener('change', handleFileSelect);
+        
+        const dropZone = document.getElementById('fileInput');
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = '#f0f0f0';
+        });
+        
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = '';
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = '';
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                loadFile(file);
+            }
+        });
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                loadFile(file);
+            }
+        }
+
+        function loadFile(file) {
+            if (!file.name.endsWith('.json')) {
+                showError('Please select a JSON file');
+                return;
+            }
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    activationData = JSON.parse(e.target.result);
+                    populateLayerSelect();
+                    displayTokens();
+                    loading.style.display = 'none';
+                } catch (err) {
+                    showError('Invalid JSON file');
+                    console.error(err);
+                }
+            };
+            reader.onerror = () => showError('Error reading file');
+            reader.readAsText(file);
+        }
+
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+            loading.style.display = 'none';
+        }
+
+        function flattenArray(arr) {
+            return arr.flat(Infinity);
+        }
+
+        function getNeuronCount(layer) {
+            return flattenArray(activationData.activations[0][layer]).length;
+        }
+
+        function getActivationValue(activation, layer, neuronIndex) {
+            const flattened = flattenArray(activation[layer]);
+            return flattened[neuronIndex];
+        }
+
+        function populateLayerSelect() {
+            const layerSelect = document.getElementById('layerSelect');
+            layerSelect.innerHTML = '<option value="">Select Layer</option>';
+            const layers = Object.keys(activationData.activations[0]);
+            layers.forEach(layer => {
+                const option = document.createElement('option');
+                option.value = layer;
+                option.textContent = layer;
+                layerSelect.appendChild(option);
+            });
+            layerSelect.addEventListener('change', (e) => {
+                currentLayer = e.target.value;
+                populateNeuronSelect();
+                updateVisualization();
+            });
+        }
+
+        function populateNeuronSelect() {
+            const neuronSelect = document.getElementById('neuronSelect');
+            neuronSelect.innerHTML = '<option value="">Select Neuron</option>';
+            if (!currentLayer) return;
+            const neuronCount = getNeuronCount(currentLayer);
+            for (let i = 0; i < neuronCount; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Neuron ${i}`;
+                neuronSelect.appendChild(option);
+            }
+            neuronSelect.addEventListener('change', (e) => {
+                currentNeuron = parseInt(e.target.value);
+                updateVisualization();
+            });
+        }
+
+        function getColor(value, minVal, maxVal) {
+            const normalized = (value - minVal) / (maxVal - minVal) * 2 - 1;
+            if (normalized > 0) {
+                return `rgba(0, 255, 0, ${normalized})`;
+            } else if (normalized < 0) {
+                return `rgba(255, 0, 0, ${Math.abs(normalized)})`;
+            }
+            return 'rgba(128, 128, 128, 0.3)';
+        }
+
+        function updateVisualization() {
+            if (!currentLayer || currentNeuron === '') return;
+            const tokens = activationData.tokens;
+            const activations = activationData.activations;
+            let minVal = Infinity;
+            let maxVal = -Infinity;
+            activations.forEach(a => {
+                const value = getActivationValue(a, currentLayer, currentNeuron);
+                minVal = Math.min(minVal, value);
+                maxVal = Math.max(maxVal, value);
+            });
+            stats.textContent = `Range: ${minVal.toFixed(4)} to ${maxVal.toFixed(4)}`;
+            tokens.forEach((token, i) => {
+                const tokenEl = document.getElementById(`token-${i}`);
+                const activation = getActivationValue(activations[i], currentLayer, currentNeuron);
+                tokenEl.style.backgroundColor = getColor(activation, minVal, maxVal);
+            });
+        }
+
+        function getContributionColor(value) {
+            // Convert value [0-1] to a blue gradient
+            return `rgba(0, 123, 255, ${value})`;
+        }
+        
+        function showTokenContributions(tokenIndex) {
+            if (!currentLayer || currentNeuron === '') return;
+            
+            const scale = document.getElementById('contributionScale');
+            scale.style.display = 'block';
+            
+            // Reset all tokens
+            document.querySelectorAll('.token').forEach(t => {
+                t.classList.remove('contributing');
+                t.style.backgroundColor = '';
+            });
+            
+            // Highlight current token
+            const currentToken = document.getElementById(`token-${tokenIndex}`);
+            currentToken.classList.add('contributing');
+            
+            // Show contributions from previous tokens
+            if (activationData.contributions && 
+                activationData.contributions[tokenIndex] && 
+                activationData.contributions[tokenIndex][currentLayer]) {
+                
+                const contributions = activationData.contributions[tokenIndex][currentLayer];
+                for (let i = 0; i < tokenIndex; i++) {
+                    const token = document.getElementById(`token-${i}`);
+                    if (token && contributions[i] !== undefined) {
+                        token.style.backgroundColor = getContributionColor(contributions[i]);
+                    }
+                }
+            }
+        }
+        
+        function hideTokenContributions() {
+            document.getElementById('contributionScale').style.display = 'none';
+            document.querySelectorAll('.token').forEach(t => {
+                t.classList.remove('contributing');
+                t.style.backgroundColor = '';
+            });
+            updateVisualization(); // Restore normal visualization
+        }
+        
+        function displayTokens() {
+            const container = document.getElementById('tokenContainer');
+            container.innerHTML = '';
+            activationData.tokens.forEach((token, i) => {
+                if (token === '\n') {
+                    const br = document.createElement('br');
+                    container.appendChild(br);
+                    const span = document.createElement('span');
+                    span.id = `token-${i}`;
+                    span.className = 'token newline-token';
+                    span.innerHTML = '↵';
+                    span.style.opacity = '0.5';
+                    container.appendChild(span);
+                } else {
+                    const span = document.createElement('span');
+                    span.id = `token-${i}`;
+                    span.className = 'token';
+                    span.textContent = token.replace(/ /g, '␣');
+                    span.addEventListener('mouseenter', () => showTokenContributions(i));
+                    span.addEventListener('mouseleave', hideTokenContributions);
+                    container.appendChild(span);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
