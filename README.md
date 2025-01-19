@@ -88,6 +88,7 @@ Optuna options (If chosen, Optuna will gain the ability to try multiple preset m
 - reverse_letter_order.txt: A simple dataset; 7 randomly generated letters, a comma, and the preceeding sequence mirrored. Most models can handle this fine, despite the script not being made for seq2seq
 - ShakeSpeare.txt: A standard text file containing all Shakespeare works. A useful benchmark for smaller models.
 - asciiart.txt: About 3 MBs of ASCII art crawled from the ascii art archive. A useful (albeit unorthodox) way to "benchmark" positional awareness and attention/memory. Needs a large seq_len due to the size of some ASCII arts
+- minist.txt: MNIST converted to ASCII art representation, seq_len 512 per example, another "benchmark" of spatial awareness. The model needs to be able to either maintain strong memory all throughout, or pay attention closely to prevent "misshapen" numbers. "Transformer"-likes do pretty well in this dataset (outside of BoW)
 
 # Credits
 lamb.py: Modified from https://github.com/cybertronai/pytorch-lamb/blob/master/pytorch_lamb/lamb.py.
