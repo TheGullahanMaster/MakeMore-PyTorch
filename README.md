@@ -58,7 +58,6 @@ Optuna options (If chosen, Optuna will gain the ability to try multiple preset m
 - reverse_letter_order.txt: A simple dataset; 7 randomly generated letters, a comma, and the preceeding sequence mirrored. Most models can handle this fine, despite the script not being made for seq2seq
 - ShakeSpeare.txt: A standard text file containing all Shakespeare works. A useful benchmark for smaller models.
 - asciiart.txt: About 3 MBs of ASCII art crawled from the ascii art archive. A useful (albeit unorthodox) way to "benchmark" positional awareness and attention/memory. Needs a large seq_len due to the size of some ASCII arts
-- equal_v2.txt: A standard text file containing mathematical equations and their solutions, designed to benchmark the model's ability to extract numerical values from character level representaation of numbers, perform mathematical operations, and subsequently write it down token by token. Non-line delimited, seq_len around 512.
 
 # Credits
 lamb.py: Modified from https://github.com/cybertronai/pytorch-lamb/blob/master/pytorch_lamb/lamb.py.
