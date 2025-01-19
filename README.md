@@ -25,7 +25,10 @@ Sampling and training resuming is also supported
 - makemorevis.html: A JavaScript based visualizer of activations for each token
 
 # Credits
-lamb.py: Modified from https://github.com/cybertronai/pytorch-lamb/blob/master/pytorch_lamb/lamb.py
-Original MakeMore script: Andrej Karpathy
-OpenAI, Google, Anthropic: Their AI tools were used for some of these models, like the Temporal Convnet, and the optuna implemntation
-RWKV-v5: Unknown github user, will update once found
+lamb.py: Modified from https://github.com/cybertronai/pytorch-lamb/blob/master/pytorch_lamb/lamb.py.
+
+Original MakeMore script: Andrej Karpathy.
+
+OpenAI, Google, Anthropic: Their AI tools were used for some of these models, like the Temporal Convnet, and the optuna implemntation.
+
+RWKV-v5: Unknown github user, will update once found.
