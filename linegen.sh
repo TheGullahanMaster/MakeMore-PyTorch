@@ -24,7 +24,7 @@ display_model_types() {
     echo "12) Light Recurrent Unit (The best RNN I've got on many tasks)"
     echo "13) Gated Recurrent Unit (using nn.GRUCells)"
     echo "14) Long-Short Term Memory Cell (LSTM, using nn.LSTMCells)"
-    echo "--------------------Transformers and its alternatives--------------------"
+    echo "--------------------Transformers and it's alternatives--------------------"
     echo "15) 4-layered MLP with a Causal Bag of Words"
     echo "16) GPT-2 Transformer (Normal GPT-2, has trainable positional embeddings)"
     echo "17) GPT-2 Transformer with Parabolic Cone Activations (has trainable positional embeddings)"
@@ -264,13 +264,17 @@ then
             exit 1
             ;;
     esac
-    typer='all'
-    stecount=200
+
+    # If not selecting model type 19, set default typer and stecount
+    if [[ $gulag -ne 22 ]]
+    then
+        typer='all'
+        stecount=200
     fi
 
     # Prompt for optimizer type
     display_optimizer_types
-    read -p "Enter your choice (1-22): " optim_type
+    read -p "Enter your choice (1-13): " optim_type
 
     # Map optimizer selection to optimizer names using case
     case $optim_type in
@@ -287,7 +291,6 @@ then
         11) optim="gflambhd" ;;
         12) optim="adamp" ;;
         13) optim="adabelief" ;;
-        # New Optimizers
         14) optim="adamz" ;;
         15) optim="caadam" ;;
         16) optim="warpadam" ;;
@@ -299,7 +302,6 @@ then
         22) optim="adadelta" ;;
         *) echo "Wrong optimizer type selected."; exit 1 ;;
     esac
-
     # Prompt to decide what to optimize
     read -p "Shall we optimize the model? (1=yes|0=no): " optimi
     if [[ $optimi -eq 1 ]]
@@ -311,7 +313,6 @@ then
 
     # Prompt for batch size
     read -p "Batch size: " bath
-    read -p "Train only? (1=yes|0=no): " tarain
 
     # Save configurations to files
     echo "${typo}" > conf_type
@@ -324,7 +325,7 @@ then
     echo "${seq_len}" > conf_seq_len
 
     # Construct the Python command with conditional flags
-    python_cmd="python makemore.py --input-file \"${intake}\" --type \"${typo}\" --n-layer \"${layercount}\" --n-head \"${nhead}\" --n-embd \"${embed1}\" --n-embd2 \"${embed1}\" --batch-size \"${bath}\" --optim \"${optim}\" --autotype \"${typer}\" --stepscount \"${stecount}\" --optimize --optimi \"${optuna}\" --train_only \"${tarain}\""
+    python_cmd="python3 makemore.py --input-file \"${intake}\" --type \"${typo}\" --n-layer \"${layercount}\" --n-head \"${nhead}\" --n-embd \"${embed1}\" --n-embd2 \"${embed1}\" --batch-size \"${bath}\" --optim \"${optim}\" --autotype \"${typer}\" --stepscount \"${stecount}\" --optimize --optimi \"${optuna}\""
 
     # Add --line_delim if line_delim is 1
     if [[ $line_delim -eq 1 ]]
@@ -387,10 +388,9 @@ then
     fi
 
     read -p "Batch size: " bath
-    read -p "Train only? (1=yes|0=no): " tarain
 
     # Construct the Python command with conditional flags
-    python_cmd="python makemore.py --input-file \"${intake}\" --type \"${typo}\" --n-layer \"${layercount}\" --n-head \"${nhead}\" --n-embd \"${embed1}\" --n-embd2 \"${embed1}\" --batch-size \"${bath}\" --resume --optim \"${optim}\" --train_only \"${tarain}\""
+    python_cmd="python3 makemore.py --input-file \"${intake}\" --type \"${typo}\" --n-layer \"${layercount}\" --n-head \"${nhead}\" --n-embd \"${embed1}\" --n-embd2 \"${embed1}\" --batch-size \"${bath}\" --resume --optim \"${optim}\""
 
     # Add --line_delim if line_delim is 1
     if [[ $line_delim -eq 1 ]]
@@ -456,7 +456,7 @@ then
     fi
 
     # Construct the Python command with conditional flags
-    python_cmd="python makemore.py --input-file \"${intake}\" --type \"${typo}\" --n-layer \"${layercount}\" --n-head \"${nhead}\" --n-embd \"${embed1}\" --n-embd2 \"${embed1}\" --sample-only --num-samples \"${samplecount}\" --prompt \"${prmopt}\" --do-sample \"${dosample}\" --steps_sample \"${samplelen}\""
+    python_cmd="python3 makemore.py --input-file \"${intake}\" --type \"${typo}\" --n-layer \"${layercount}\" --n-head \"${nhead}\" --n-embd \"${embed1}\" --n-embd2 \"${embed1}\" --sample-only --num-samples \"${samplecount}\" --prompt \"${prmopt}\" --do-sample \"${dosample}\" --steps_sample \"${samplelen}\""
 
     # Add --line_delim if line_delim is 1
     if [[ $line_delim -eq 1 ]]
